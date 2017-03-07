@@ -48,14 +48,10 @@ public class RandomAccessBlockDeviceFactory {
 			throw new FileNotFoundException("Unable to open file");
 		}
 		CLib.INSTANCE.fstat64(fileDescriptor, thestat);
-		System.out.println("Is block device: " + thestat.isBlockDevice());
 		if (thestat.isBlockDevice()) {
-			System.out.println(CLib.INSTANCE.ioctl(fileDescriptor, CLib.DKIOCGETBLOCKSIZE, blockSize));
-			System.out.println("Block size: " + blockSize.getValue());
-			System.out.println(CLib.INSTANCE.ioctl(fileDescriptor, CLib.DKIOCGETBLOCKCOUNT, blocks));
-			System.out.println("Blocks: " + blocks.getValue());
+			CLib.INSTANCE.ioctl(fileDescriptor, CLib.DKIOCGETBLOCKSIZE, blockSize);
+			CLib.INSTANCE.ioctl(fileDescriptor, CLib.DKIOCGETBLOCKCOUNT, blocks);
 			size = blockSize.getValue() * blocks.getValue();
-			System.out.println("Total size: " + size);
 			CLib.INSTANCE.close(fileDescriptor);
 			return new RandomAccessBlockDevice(file, mode, blocks.getValue(), blockSize.getValue(), size);
 		} else {

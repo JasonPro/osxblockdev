@@ -20,6 +20,7 @@
  */
 package org.jasonpro.io.osxblockdev;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
@@ -69,15 +70,14 @@ public class BlockDeviceChannel extends FileChannel {
 
 		final stat.ByReference thestat = new stat.ByReference();
 		fileDescriptor = CLib.INSTANCE.open(path.toString(), CLib.O_RDONLY, 0);
+		if (fileDescriptor < 0) {
+			throw new FileNotFoundException("Unable to open file");
+		}
 		CLib.INSTANCE.fstat64(fileDescriptor, thestat);
-		System.out.println("Is block device: " + thestat.isBlockDevice());
 		if (thestat.isBlockDevice()) {
-			System.out.println(CLib.INSTANCE.ioctl(fileDescriptor, CLib.DKIOCGETBLOCKSIZE, blockSize));
-			System.out.println("Block size: " + blockSize.getValue());
-			System.out.println(CLib.INSTANCE.ioctl(fileDescriptor, CLib.DKIOCGETBLOCKCOUNT, blocks));
-			System.out.println("Blocks: " + blocks.getValue());
+			CLib.INSTANCE.ioctl(fileDescriptor, CLib.DKIOCGETBLOCKSIZE, blockSize);
+			CLib.INSTANCE.ioctl(fileDescriptor, CLib.DKIOCGETBLOCKCOUNT, blocks);
 			size = blockSize.getValue() * blocks.getValue();
-			System.out.println("Total size: " + size);
 			CLib.INSTANCE.close(fileDescriptor);
 			FileSystemProvider provider = path.getFileSystem().provider();
 			return new BlockDeviceChannel(provider.newFileChannel(path, options, attrs), blocks.getValue(),
